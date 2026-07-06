@@ -4,12 +4,8 @@ from telegram.ext import ContextTypes
 from app.messages import t
 
 
-async def create_record_menu(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def create_record_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-
     if query:
         await query.answer()
 
@@ -30,12 +26,8 @@ async def create_record_menu(
     )
 
 
-async def ask_estimated_age(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def ask_estimated_age(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-
     if query:
         await query.answer()
 
@@ -43,8 +35,6 @@ async def ask_estimated_age(
         context.user_data.clear()
         context.user_data["event_type"] = event_type
         context.user_data["record_step"] = "estimated_age"
-
-        print(f"Selected event_type: {event_type}")
 
         await query.edit_message_text(
             text=(
@@ -60,10 +50,44 @@ async def ask_estimated_age(
         )
 
 
-async def handle_record_text(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-) -> None:
+async def ask_reporter_source(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    keyboard = [
+        [InlineKeyboardButton("👨‍👩‍👧 Familia", callback_data="source_family")],
+        [InlineKeyboardButton("🏥 Hospital", callback_data="source_hospital")],
+        [InlineKeyboardButton("🚒 Bomberos", callback_data="source_fire_department")],
+        [InlineKeyboardButton("🤝 Voluntario", callback_data="source_volunteer")],
+        [InlineKeyboardButton("👮 Policía", callback_data="source_police")],
+        [InlineKeyboardButton("👤 Amigo / Conocido", callback_data="source_friend_acquaintance")],
+        [InlineKeyboardButton("❓ Desconocido", callback_data="source_unknown")],
+    ]
+
+    await update.message.reply_text(
+        "📣 ¿Quién está reportando este evento?\n\n"
+        "Selecciona la opción que mejor describa la fuente del reporte.",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+
+async def handle_reporter_source(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    if not query:
+        return
+
+    await query.answer()
+
+    source = query.data.replace("source_", "")
+    context.user_data["source"] = source
+    context.user_data["record_step"] = "description"
+
+    await query.edit_message_text(
+        text=(
+            "📝 Describe brevemente la situación.\n\n"
+            "Escribe solo información útil y concreta."
+        )
+    )
+
+
+async def handle_record_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message:
         return
 
@@ -75,9 +99,9 @@ async def handle_record_text(
         context.user_data["record_step"] = "reported_name"
 
         await update.message.reply_text(
-            "👤 ¿Sabes cómo fue reportada la persona?\n\n"
-            "Escribe el nombre reportado o escribe:\n"
-            "Desconocido"
+            "👤 ¿Sabes el nombre de la persona?\n\n"
+            "Si lo sabes, escribe el nombre reportado.\n"
+            "Si no lo sabes, escribe: Desconocido"
         )
         return
 
@@ -86,7 +110,7 @@ async def handle_record_text(
         context.user_data["record_step"] = "reported_location"
 
         await update.message.reply_text(
-            "📍 ¿Dónde fue reportado el caso?\n\n"
+            "📍 ¿En qué localización está esa persona?\n\n"
             "Puedes escribir ciudad, barrio, hospital, refugio o punto de referencia."
         )
         return
@@ -95,26 +119,7 @@ async def handle_record_text(
         context.user_data["reported_location"] = text
         context.user_data["record_step"] = "source"
 
-        await update.message.reply_text(
-            "🏥 ¿Cuál es la fuente de información?\n\n"
-            "Ejemplos:\n"
-            "Familia\n"
-            "Hospital\n"
-            "Bomberos\n"
-            "Voluntario\n"
-            "Policía\n"
-            "Desconocido"
-        )
-        return
-
-    if current_step == "source":
-        context.user_data["source"] = text
-        context.user_data["record_step"] = "description"
-
-        await update.message.reply_text(
-            "📝 Describe brevemente la situación.\n\n"
-            "Escribe solo información útil y concreta."
-        )
+        await ask_reporter_source(update, context)
         return
 
     if current_step == "description":
@@ -126,8 +131,8 @@ async def handle_record_text(
             f"Tipo de evento: {context.user_data.get('event_type')}\n"
             f"Edad estimada: {context.user_data.get('estimated_age')}\n"
             f"Nombre reportado: {context.user_data.get('reported_name')}\n"
-            f"Lugar reportado: {context.user_data.get('reported_location')}\n"
-            f"Fuente: {context.user_data.get('source')}\n"
+            f"Localización: {context.user_data.get('reported_location')}\n"
+            f"Reportado por: {context.user_data.get('source')}\n"
             f"Descripción: {context.user_data.get('description')}"
         )
 
