@@ -47,6 +47,7 @@ async def ask_reported_name(
 
         event_type = query.data.replace("event_", "")
         context.user_data["event_type"] = event_type
+        context.user_data["record_step"] = "reported_name"
 
         print(f"Selected event_type: {event_type}")
 
@@ -59,3 +60,44 @@ async def ask_reported_name(
                 "Desconocido"
             )
         )
+
+
+async def handle_record_text(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+) -> None:
+    if not update.message:
+        return
+
+    text = update.message.text.strip()
+    current_step = context.user_data.get("record_step")
+
+    if current_step == "reported_name":
+        context.user_data["reported_name"] = text
+        context.user_data["record_step"] = "estimated_age"
+
+        print(f"Reported name: {text}")
+
+        await update.message.reply_text(
+            "🎂 ¿Cuál es la edad aproximada?\n\n"
+            "Puedes escribir un número o una aproximación.\n\n"
+            "Ejemplos:\n"
+            "34\n"
+            "Alrededor de 50\n"
+            "Niño\n"
+            "Adulto\n"
+            "Desconocido"
+        )
+        return
+
+    if current_step == "estimated_age":
+        context.user_data["estimated_age"] = text
+        context.user_data["record_step"] = "reported_location"
+
+        print(f"Estimated age: {text}")
+
+        await update.message.reply_text(
+            "📍 ¿Dónde fue reportado el caso?\n\n"
+            "Puedes escribir ciudad, barrio, hospital, refugio o punto de referencia."
+        )
+        return
