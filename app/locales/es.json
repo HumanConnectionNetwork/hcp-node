@@ -1,0 +1,13 @@
+{
+  "welcome_title": "🤝 Human Connection Network",
+  "welcome_message": "Bienvenido. Este servicio permite crear y buscar casos humanitarios reportados.",
+  "main_menu_question": "¿Qué deseas hacer?",
+  "create_report": "📝 Crear reporte",
+  "search_report": "🔍 Buscar caso reportado",
+  "language": "🌐 Idioma",
+  "help": "❓ Ayuda",
+  "cancel": "❌ Cancelar",
+  "confirm": "✅ Confirmar",
+  "edit": "✏️ Editar",
+  "unknown": "Desconocido"
+}
