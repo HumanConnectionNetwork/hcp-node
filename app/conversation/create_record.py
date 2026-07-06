@@ -18,37 +18,37 @@ async def create_record_menu(
     keyboard = [
         [
             InlineKeyboardButton(
-                t("report_missing_person", user_language),
-                callback_data="report_missing_person",
+                t("event.missing", user_language),
+                callback_data="event_missing",
             )
         ],
         [
             InlineKeyboardButton(
-                t("report_hospitalized_person", user_language),
-                callback_data="report_hospitalized_person",
+                t("event.hospitalized", user_language),
+                callback_data="event_hospitalized",
             )
         ],
         [
             InlineKeyboardButton(
-                t("report_sheltered_person", user_language),
-                callback_data="report_sheltered_person",
+                t("event.sheltered", user_language),
+                callback_data="event_sheltered",
             )
         ],
         [
             InlineKeyboardButton(
-                t("report_safe_person", user_language),
-                callback_data="report_safe_person",
+                t("event.safe", user_language),
+                callback_data="event_safe",
             )
         ],
         [
             InlineKeyboardButton(
-                t("report_public_emergency", user_language),
-                callback_data="report_public_emergency",
+                t("event.public_emergency", user_language),
+                callback_data="event_public_emergency",
             )
         ],
         [
             InlineKeyboardButton(
-                t("cancel", user_language),
+                t("common.cancel", user_language),
                 callback_data="cancel",
             )
         ],
@@ -57,8 +57,8 @@ async def create_record_menu(
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     message = (
-        f"{t('create_report_title', user_language)}\n\n"
-        f"{t('create_report_question', user_language)}"
+        f"{t('record.title', user_language)}\n\n"
+        f"{t('record.question', user_language)}"
     )
 
     if query:
