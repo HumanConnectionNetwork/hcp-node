@@ -12,6 +12,7 @@ from app.conversation.create_record import (
     create_record_menu,
     handle_record_text,
     handle_reporter_source,
+    select_subject_type,
     submit_record,
 )
 from app.conversation.search_record import search_record_menu
@@ -39,6 +40,10 @@ def main() -> None:
 
     application.add_handler(
         CallbackQueryHandler(search_record_menu, pattern="^search_report$")
+    )
+
+    application.add_handler(
+        CallbackQueryHandler(select_subject_type, pattern="^subject_")
     )
 
     application.add_handler(
