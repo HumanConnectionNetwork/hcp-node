@@ -2,15 +2,12 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from app.conversation import states
+from app.conversation.create_record.form import ANIMAL_BREED_TEXT
 from app.conversation.create_record.review import review_record
-from app.conversation.create_record.form import (
-    ANIMAL_BREED_TEXT,
-    ANIMAL_SPECIES,
-    ANIMAL_SIZE,
-)
 
 
 EDIT_FIELD_KEY = "edit_field"
+EDIT_TEXT_STEP = "edit_text"
 
 
 async def show_edit_menu(
@@ -18,7 +15,6 @@ async def show_edit_menu(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -60,7 +56,6 @@ async def handle_edit_choice(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -75,7 +70,7 @@ async def handle_edit_choice(
     context.user_data[EDIT_FIELD_KEY] = choice
 
     if choice == "estimated_age":
-        context.user_data["record_step"] = "edit_text"
+        context.user_data["record_step"] = EDIT_TEXT_STEP
         await query.edit_message_text(
             text=(
                 "🎂 Escribe la nueva edad estimada.\n\n"
@@ -87,7 +82,7 @@ async def handle_edit_choice(
         return
 
     if choice == "reported_name":
-        context.user_data["record_step"] = "edit_text"
+        context.user_data["record_step"] = EDIT_TEXT_STEP
         await query.edit_message_text(
             text=(
                 "👤 Escribe el nuevo nombre reportado.\n\n"
@@ -98,17 +93,18 @@ async def handle_edit_choice(
         return
 
     if choice == "reported_location":
-        context.user_data["record_step"] = "edit_text"
+        context.user_data["record_step"] = EDIT_TEXT_STEP
         await query.edit_message_text(
             text=(
                 "📍 Escribe la nueva localización.\n\n"
-                "Puedes escribir ciudad, barrio, hospital, refugio o punto de referencia."
+                "Puedes escribir ciudad, barrio, hospital, refugio, clínica veterinaria "
+                "o punto de referencia."
             )
         )
         return
 
     if choice == "description":
-        context.user_data["record_step"] = "edit_text"
+        context.user_data["record_step"] = EDIT_TEXT_STEP
         await query.edit_message_text(
             text=(
                 "📝 Escribe la nueva descripción.\n\n"
@@ -122,12 +118,10 @@ async def handle_edit_choice(
         return
 
     if choice == "animal_species":
-        context.user_data["record_step"] = ANIMAL_SPECIES
         await show_edit_animal_species_options(update, context)
         return
 
     if choice == "animal_size":
-        context.user_data["record_step"] = ANIMAL_SIZE
         await show_edit_animal_size_options(update, context)
         return
 
@@ -141,7 +135,6 @@ async def show_edit_source_options(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -166,7 +159,6 @@ async def handle_edit_source(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -183,7 +175,6 @@ async def show_edit_animal_species_options(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -206,7 +197,6 @@ async def handle_edit_animal_species(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -223,7 +213,6 @@ async def show_edit_animal_size_options(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -245,7 +234,6 @@ async def handle_edit_animal_size(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -262,7 +250,6 @@ async def show_edit_animal_breed_options(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -283,7 +270,6 @@ async def handle_edit_animal_breed(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     query = update.callback_query
-
     if not query:
         return
 
@@ -316,13 +302,15 @@ async def handle_edit_text(
     if not update.message:
         return False
 
-    if context.user_data.get("record_step") not in ["edit_text", ANIMAL_BREED_TEXT]:
+    step = context.user_data.get("record_step")
+
+    if step not in [EDIT_TEXT_STEP, ANIMAL_BREED_TEXT]:
         return False
 
     text = update.message.text.strip()
     field = context.user_data.get(EDIT_FIELD_KEY)
 
-    if context.user_data.get("record_step") == ANIMAL_BREED_TEXT:
+    if step == ANIMAL_BREED_TEXT:
         if len(text) > 40:
             await update.message.reply_text(
                 "⚠️ La raza debe tener máximo 40 caracteres.\n\n"
@@ -372,6 +360,9 @@ async def handle_edit_text(
             return True
 
         context.user_data["description"] = text
+
+    else:
+        return False
 
     context.user_data["record_step"] = states.REVIEW
     await review_record(update, context)
