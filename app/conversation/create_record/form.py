@@ -2,6 +2,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from app.conversation import states
+from app.conversation.create_record.edit import handle_edit_text
 from app.conversation.create_record.review import review_record
 
 
@@ -237,6 +238,9 @@ async def handle_record_text(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
+    if await handle_edit_text(update, context):
+        return
+
     if not update.message:
         return
 
