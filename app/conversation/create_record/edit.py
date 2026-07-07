@@ -302,8 +302,12 @@ async def handle_edit_text(
 
     step = context.user_data.get("record_step")
 
-    if step not in [states.EDIT_TEXT, states.ANIMAL_BREED_TEXT]:
+    if step == states.ANIMAL_BREED_TEXT:
+    if context.user_data.get(EDIT_FIELD_KEY) != "animal_breed":
         return False
+
+elif step != states.EDIT_TEXT:
+    return False
 
     text = update.message.text.strip()
     field = context.user_data.get(EDIT_FIELD_KEY)
