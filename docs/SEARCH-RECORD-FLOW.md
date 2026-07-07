@@ -1,10 +1,10 @@
 # SEARCH-RECORD-FLOW
 
-Version: 0.1 (Draft)
+Version: 0.2 (Draft)
 
 Status: Draft
 
-Category: Client Specification
+Category: Client UX Specification
 
 Project: Human Connection Network
 
@@ -14,450 +14,392 @@ License: Apache-2.0
 
 Depends On:
 
-* HCP-0000 Overview
-* HCP-0001 Humanitarian Record
-* HCP-0004 Correlation Candidate
-* HCP Client Role
-* BOT-FLOW
-* CREATE-RECORD-FLOW
+- HCP Client Role
+- BOT-FLOW
+- CLIENT-DESIGN-PRINCIPLES
+- HCP-0001 Humanitarian Record
 
 ---
 
 # 1. Purpose
 
-This document defines the conversational flow used by the HCP Telegram Client to search Humanitarian Records.
+This document defines the complete user experience for searching Humanitarian Records using an HCP Client.
 
-Unlike traditional systems, HCP does not search for people by identity.
+Unlike traditional search systems, HCP does not attempt to identify people directly.
 
-Instead, it searches for humanitarian observations that may describe the same reported case.
-
-The objective is to help users find relevant humanitarian information while clearly communicating uncertainty.
+Instead, it searches for humanitarian observations that may correspond to the same real-world event.
 
 ---
 
-# 2. Fundamental Principle
+# 2. Design Principles
 
-The HCP Telegram Client must never claim that it has identified a person.
+The Search flow follows the same philosophy as Create Report.
 
-Instead, it should communicate that it has found one or more reported cases whose characteristics are similar to the information provided.
-
-The client always presents **possible correlations**, never confirmed identities.
-
----
-
-# 3. Explaining the Search
-
-Before asking for any information, the client should explain the purpose of the search.
-
-Example:
+- One question at a time.
+- Simple language.
+- Buttons whenever possible.
+- Explainable results.
+- Correlation instead of identity.
 
 ---
 
-🔍 Search Reported Cases
-
-This service searches humanitarian reports that may describe the same reported event.
-
-It does **not** identify people by identity.
-
-Results are presented according to the similarity of the available information.
-
----
-
-This explanation should always appear before the first question.
-
----
-
-# 4. Search Flow
+# 3. Search Flow
 
 ```text
-Search Reported Cases
+/start
 
 ↓
 
-Reported Name
+🔍 Buscar Caso Reportado
 
 ↓
 
-Estimated Age (optional)
+Seleccionar tipo de caso
 
 ↓
 
-Reported Location (optional)
+Edad aproximada
 
 ↓
 
-Search
+Nombre reportado (opcional)
 
 ↓
 
-GET /hcp/search
+Lugar reportado
 
 ↓
 
-Correlation Candidates
+Consultar Nodo HCP
 
 ↓
 
-View Details
+Resultados correlacionados
 
 ↓
 
-End
+Explicación de la correlación
 ```
 
 ---
 
-# 5. Search Criteria
+# 4. Event Selection
 
-The Telegram Client should request only the information necessary to perform the search.
+The user selects one option.
 
----
+- 🚨 Persona desaparecida
+- 🏥 Persona hospitalizada
+- 🏠 Persona refugiada
+- ✅ Persona localizada
 
-## 👤 Reported Name
+Public Emergency is intentionally excluded.
 
-Question
-
-"What name was reported?"
-
-The name is recommended.
-
-If unknown, the user may skip this field.
+Public emergencies represent institutional observations and will be handled by specialized HCP clients in future versions.
 
 ---
 
-## 🎂 Estimated Age
+# 5. Search Form
 
-Question
+## Step 1
 
-"What is the estimated age?"
+🎂
 
-Approximate values are acceptable.
+**What is the estimated age?**
 
-This field is optional.
+Only numeric values are accepted.
+
+Example
+
+45
+
+The age is stored as an integer to improve future correlation.
 
 ---
 
-## 📍 Reported Location
+## Step 2
 
-Question
+👤
 
-"Where was this person reported?"
+**Do you know the reported name?**
+
+The name is optional.
+
+Users may answer:
+
+Unknown
+
+The absence of a name must never prevent searching.
+
+---
+
+## Step 3
+
+📍
+
+**Where was this person reported?**
 
 Examples
 
 City
 
-Hospital
-
-Shelter
-
 Neighborhood
 
-Region
-
-This field is optional.
-
----
-
-The search may proceed even when only one field is available.
-
----
-
-# 6. Sending the Query
-
-After confirmation
-
-The Telegram Client sends the search request to the configured HCP Node.
-
-The client does not perform correlation calculations.
-
-Correlation is always performed by the HCP Node.
-
----
-
-# 7. Search Results
-
-The HCP Node may return:
-
-• No results
-
-• One Correlation Candidate
-
-• Two Correlation Candidates
-
-• Three Correlation Candidates
-
-The Telegram Client should display a maximum of three candidates ordered by **Correlation Probability (%)**.
-
----
-
-# 8. Correlation Candidate
-
-Each candidate represents a humanitarian report that may correspond to the reported case.
-
-The client should display information similar to the following.
-
-────────────────────────
-
-Possible Report #1
-
-Probability
-
-92%
-
-Reported Name
-
-Maria Perez
-
-Estimated Age
-
-34
-
-Reported Location
-
-Caracas
-
-Current Status
-
-Hospitalized
-
-Source
-
 Hospital
-
-View Details
-
-────────────────────────
-
-Possible Report #2
-
-Probability
-
-78%
-
-Reported Name
-
-Maria Perez
-
-Estimated Age
-
-35
-
-Reported Location
-
-Petare
-
-Current Status
-
-Missing
-
-Source
-
-Volunteer
-
-View Details
-
-────────────────────────
-
-Possible Report #3
-
-Probability
-
-64%
-
-Reported Name
-
-Maria Perez
-
-Estimated Age
-
-33
-
-Reported Location
-
-Baruta
-
-Current Status
 
 Shelter
 
-Source
-
-NGO
-
-View Details
+Reference point
 
 ---
 
-Candidates should always appear ordered from highest to lowest probability.
+# 6. Correlation Philosophy
+
+The objective is not to search for identities.
+
+The objective is to search for compatible humanitarian observations.
+
+A correlation represents the probability that two independent observations describe the same humanitarian event.
 
 ---
 
-# 9. Explaining Probability
+# 7. Correlation Priority
 
-Whenever results are displayed, the Telegram Client should explain:
+Correlation should consider multiple variables.
 
----
+Not all variables have the same importance.
 
-Probability (%) represents the estimated similarity between your search and each humanitarian report.
+Recommended order:
 
-It is calculated from the reported information available at the time of the search.
+## 1. Time and Place
 
-A higher percentage indicates greater similarity, but it does **not** confirm that both reports refer to the same person.
+Highest priority.
 
----
-
-This explanation should always accompany the results.
-
----
-
-# 10. Viewing Details
-
-Selecting a candidate displays additional information about that humanitarian report.
+Observations occurring within compatible time windows and geographically compatible locations should receive the strongest correlation score.
 
 Example
 
-Reported Name
+Two observations reported in the same city within minutes or hours are significantly more compatible than observations separated by hundreds of kilometers within the same time period.
 
-Estimated Age
-
-Reported Location
-
-Event Type
-
-Current Status
-
-Information Source
-
-Description
-
-Report Date
-
-Correlation Probability
-
-Reference ID
-
-The client should not expose unnecessary personal information.
+Impossible travel scenarios should reduce correlation drastically.
 
 ---
 
-# 11. No Results
+## 2. Reported Name
 
-If no candidates are found
+Second highest priority.
 
-The Telegram Client should display
+Names should support:
 
----
+- Exact matches
+- Minor spelling variations
+- Accent differences
+- Common abbreviations
+- Unknown names
 
-No similar humanitarian reports were found.
-
-This does not necessarily mean that no report exists.
-
-New humanitarian reports may be submitted over time.
-
-You may try again later.
-
----
-
-The message should avoid suggesting failure.
-
----
-
-# 12. Communication Principles
-
-The Telegram Client should always communicate uncertainty honestly.
-
-Recommended wording
-
-✔ Possible Match
-
-✔ Possible Correlation
-
-✔ Similar Report
-
-Avoid
-
-✘ Identified Person
-
-✘ Exact Match
-
-✘ Confirmed Identity
-
----
-
-# 13. Probability Presentation
-
-Correlation Probability should always be presented as a percentage.
+Large differences between names should reduce correlation significantly.
 
 Example
 
-Probability
+Luis
 
-96%
+Luiz
 
-83%
+L. Trapito
 
-71%
+may represent compatible observations.
 
-58%
+Mario
 
-The percentage should never be interpreted as certainty.
+Pedro
 
-It represents only the estimated similarity calculated by the HCP Node.
+José
 
----
-
-# 14. Accessibility
-
-The search flow should remain accessible.
-
-Recommendations
-
-• One question at a time.
-
-• Short sentences.
-
-• Icons together with descriptive text.
-
-• Large buttons.
-
-• Screen-reader friendly wording.
-
-• Never rely only on color to communicate information.
+should reduce correlation substantially.
 
 ---
 
-# 15. Future Compatibility
+## 3. Estimated Age
 
-This search flow should remain identical across future HCP clients.
+Estimated age should be compared using ranges.
+
+Small differences are acceptable.
 
 Examples
 
-* Telegram
+44
 
-* WhatsApp
+45
 
-* SMS
+46
 
-* Mobile Applications
+remain compatible.
 
-* Web Clients
+Large differences should reduce correlation.
 
-* Mesh Network Clients
+Example
 
-Only the communication channel should change.
+20 years
 
-The search experience should remain consistent throughout the HCP ecosystem.
+65 years
+
+are unlikely to describe the same observation.
 
 ---
 
-# 16. Summary
+## 4. Event Type
 
-The Search Record flow enables users to search humanitarian reports using simple information such as a reported name, estimated age and reported location.
+Event type should remain compatible.
 
-The Telegram Client does not identify people.
+Examples
 
-Instead, it presents up to three Correlation Candidates ranked by Correlation Probability (%), helping users understand which humanitarian reports are most similar while clearly communicating that every result represents a probability rather than a confirmed identity.
+Missing
 
-This approach preserves both the technical integrity of the Humanitarian Connection Protocol and the trust of the people who depend on it during humanitarian emergencies.
+Hospitalized
 
+Sheltered
+
+Safe
+
+Some transitions may increase correlation.
+
+Example
+
+Missing
+
+↓
+
+Hospitalized
+
+↓
+
+Safe
+
+may describe the natural evolution of the same humanitarian event.
+
+---
+
+## 5. Source
+
+Source contributes additional confidence.
+
+Examples
+
+Hospital
+
+Fire Department
+
+Police
+
+Family
+
+Volunteer
+
+Friend
+
+Unknown
+
+Institutional observations may receive additional trust but should never replace humanitarian verification.
+
+---
+
+# 8. Correlation Score
+
+The final result should be expressed as
+
+Probability %
+
+Example
+
+94 %
+
+78 %
+
+61 %
+
+The percentage represents compatibility between observations.
+
+It never represents certainty.
+
+---
+
+# 9. Search Results
+
+The client should present up to three candidate observations ordered by probability.
+
+Each result displays
+
+- Event type
+- Reported name
+- Estimated age
+- Location
+- Source
+- Status
+- Probability
+
+---
+
+# 10. Explainable Correlation
+
+Each result should provide an explanation.
+
+Example
+
+Why was this result suggested?
+
+✓ Similar reported name
+
+✓ Compatible estimated age
+
+✓ Same city
+
+✓ Compatible reporting time
+
+✓ Compatible event type
+
+✗ Different source
+
+This allows users to understand the reason behind each probability.
+
+---
+
+# 11. Weak Correlations
+
+If no strong matches exist the client should clearly communicate this.
+
+Example
+
+No highly compatible observations were found.
+
+However, some reports share one or more similar characteristics.
+
+These observations are presented because they may still be useful during humanitarian verification.
+
+---
+
+# 12. No Results
+
+Example
+
+No compatible observations were found using the provided information.
+
+You may try again using different or additional information.
+
+---
+
+# 13. Human Verification
+
+Correlation never replaces human judgment.
+
+Search results are recommendations intended to assist humanitarian work.
+
+Final verification always depends on people and organizations.
+
+---
+
+# 14. Summary
+
+Searching in HCP is fundamentally different from searching for people.
+
+The protocol searches for humanitarian observations.
+
+By combining time, location, reported name, estimated age, event type and source, HCP produces explainable probabilities that help users locate potentially related humanitarian events while preserving transparency and avoiding assumptions about identity.
