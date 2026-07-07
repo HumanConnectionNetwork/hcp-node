@@ -4,12 +4,43 @@ from telegram.ext import ContextTypes
 from app.conversation import states
 
 
-EVENT_LABELS = {
+HUMAN_EVENT_LABELS = {
     "missing": "🚨 Persona desaparecida",
     "hospitalized": "🏥 Persona hospitalizada",
     "sheltered": "🏠 Persona refugiada / en albergue",
     "safe": "✅ Persona localizada / segura",
     "public_emergency": "🚑 Emergencia pública",
+}
+
+
+ANIMAL_SPECIES_LABELS = {
+    "dog": "Perro",
+    "cat": "Gato",
+    "horse": "Caballo",
+    "bird": "Ave",
+    "unknown": "Animal",
+}
+
+
+ANIMAL_SIZE_LABELS = {
+    "large": "Grande",
+    "medium": "Mediano",
+    "small": "Pequeño",
+    "unknown": "Desconocido",
+}
+
+
+ANIMAL_BREED_LABELS = {
+    "mixed": "Mestizo / Criollo",
+    "unknown": "Desconocida",
+}
+
+
+ANIMAL_EVENT_LABELS = {
+    "missing": "desaparecido",
+    "hospitalized": "atendido",
+    "sheltered": "resguardado",
+    "safe": "localizado / seguro",
 }
 
 
@@ -24,11 +55,29 @@ SOURCE_LABELS = {
 }
 
 
+def get_event_label(context: ContextTypes.DEFAULT_TYPE) -> str:
+    subject_type = context.user_data.get("subject_type", "human")
+    event_type = context.user_data.get("event_type", "unknown")
+
+    if subject_type == "animal":
+        species = context.user_data.get("animal_species", "unknown")
+        species_label = ANIMAL_SPECIES_LABELS.get(species, "Animal")
+        event_label = ANIMAL_EVENT_LABELS.get(event_type, "reportado")
+        return f"🐾 {species_label} {event_label}"
+
+    return HUMAN_EVENT_LABELS.get(event_type, event_type)
+
+
+def get_animal_breed_label(context: ContextTypes.DEFAULT_TYPE) -> str:
+    breed = context.user_data.get("animal_breed", "unknown")
+    return ANIMAL_BREED_LABELS.get(breed, breed)
+
+
 async def review_record(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    event_type = context.user_data.get("event_type", "unknown")
+    subject_type = context.user_data.get("subject_type", "human")
     source = context.user_data.get("source", "unknown")
 
     summary = (
@@ -39,14 +88,32 @@ async def review_record(
         "Te pedimos enviar únicamente información que consideres verdadera o razonablemente confiable. "
         "Un reporte honesto puede ayudar a conectar información importante para otras personas.\n\n"
         "──────────────\n\n"
-        f"Tipo de evento: {EVENT_LABELS.get(event_type, event_type)}\n"
-        f"Edad estimada: {context.user_data.get('estimated_age', 'Desconocido')}\n"
-        f"Nombre reportado: {context.user_data.get('reported_name', 'Desconocido')}\n"
-        f"Localización: {context.user_data.get('reported_location', 'Desconocido')}\n"
-        f"Reportado por: {SOURCE_LABELS.get(source, source)}\n"
-        f"Descripción: {context.user_data.get('description', 'Sin descripción')}\n\n"
-        "¿Deseas enviar este reporte?"
+        f"Tipo de evento: {get_event_label(context)}\n"
     )
+
+    if subject_type == "animal":
+        species = context.user_data.get("animal_species", "unknown")
+        size = context.user_data.get("animal_size", "unknown")
+
+        summary += (
+            f"Especie: {ANIMAL_SPECIES_LABELS.get(species, 'Animal')}\n"
+            f"Tamaño: {ANIMAL_SIZE_LABELS.get(size, 'Desconocido')}\n"
+            f"Raza aproximada: {get_animal_breed_label(context)}\n"
+            f"Nombre reportado: {context.user_data.get('reported_name', 'Desconocido')}\n"
+            f"Localización: {context.user_data.get('reported_location', 'Desconocido')}\n"
+            f"Reportado por: {SOURCE_LABELS.get(source, source)}\n"
+            f"Descripción: {context.user_data.get('description', 'Sin descripción')}\n\n"
+        )
+    else:
+        summary += (
+            f"Edad estimada: {context.user_data.get('estimated_age', 'Desconocido')}\n"
+            f"Nombre reportado: {context.user_data.get('reported_name', 'Desconocido')}\n"
+            f"Localización: {context.user_data.get('reported_location', 'Desconocido')}\n"
+            f"Reportado por: {SOURCE_LABELS.get(source, source)}\n"
+            f"Descripción: {context.user_data.get('description', 'Sin descripción')}\n\n"
+        )
+
+    summary += "¿Deseas enviar este reporte?"
 
     keyboard = [
         [InlineKeyboardButton("✅ Confirmar y enviar", callback_data="review_confirm")],
