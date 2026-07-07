@@ -6,11 +6,6 @@ from app.conversation.create_record.edit import handle_edit_text
 from app.conversation.create_record.review import review_record
 
 
-ANIMAL_SPECIES = "animal_species"
-ANIMAL_SIZE = "animal_size"
-ANIMAL_BREED_TYPE = "animal_breed_type"
-ANIMAL_BREED_TEXT = "animal_breed_text"
-
 MAX_NAME_LENGTH = 80
 MAX_LOCATION_LENGTH = 120
 MAX_DESCRIPTION_LENGTH = 300
@@ -34,7 +29,7 @@ async def ask_estimated_age(
     subject_type = context.user_data.get("subject_type", "human")
 
     if subject_type == "animal":
-        context.user_data["record_step"] = ANIMAL_SPECIES
+        context.user_data["record_step"] = states.ANIMAL_SPECIES
         await show_animal_species_options(update, context)
         return
 
@@ -84,7 +79,7 @@ async def handle_animal_species(
 
     species = query.data.replace("animal_species_", "")
     context.user_data["animal_species"] = species
-    context.user_data["record_step"] = ANIMAL_SIZE
+    context.user_data["record_step"] = states.ANIMAL_SIZE
 
     await show_animal_size_options(update, context)
 
@@ -122,7 +117,7 @@ async def handle_animal_size(
 
     size = query.data.replace("animal_size_", "")
     context.user_data["animal_size"] = size
-    context.user_data["record_step"] = ANIMAL_BREED_TYPE
+    context.user_data["record_step"] = states.ANIMAL_BREED_TYPE
 
     await show_animal_breed_options(update, context)
 
@@ -161,7 +156,7 @@ async def handle_animal_breed(
     context.user_data["animal_breed_type"] = breed_type
 
     if breed_type == "known":
-        context.user_data["record_step"] = ANIMAL_BREED_TEXT
+        context.user_data["record_step"] = states.ANIMAL_BREED_TEXT
         await query.edit_message_text(
             text=(
                 "🐾 Escribe la raza aproximada.\n\n"
@@ -248,7 +243,7 @@ async def handle_record_text(
     step = context.user_data.get("record_step")
     subject_type = context.user_data.get("subject_type", "human")
 
-    if step == ANIMAL_BREED_TEXT:
+    if step == states.ANIMAL_BREED_TEXT:
         if len(text) > MAX_BREED_LENGTH:
             await update.message.reply_text(
                 "⚠️ La raza debe tener máximo 40 caracteres.\n\n"
