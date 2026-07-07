@@ -2,6 +2,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from app.conversation import states
+from app.conversation.create_record.review import review_record
 
 
 async def ask_estimated_age(
@@ -93,46 +94,67 @@ async def handle_record_text(
     text = update.message.text.strip()
     step = context.user_data.get("record_step")
 
+    #
+    # Edad estimada
+    #
+
     if step == states.ESTIMATED_AGE:
+
         context.user_data["estimated_age"] = text
         context.user_data["record_step"] = states.REPORTED_NAME
 
         await update.message.reply_text(
             "👤 ¿Sabes el nombre de la persona?\n\n"
-            "Si lo sabes, escribe el nombre reportado.\n"
-            "Si no lo sabes, escribe:\n\n"
+            "Si lo sabes, escribe el nombre reportado.\n\n"
+            "Si no lo sabes, escribe:\n"
             "Desconocido"
         )
+
         return
 
+    #
+    # Nombre reportado
+    #
+
     if step == states.REPORTED_NAME:
+
         context.user_data["reported_name"] = text
         context.user_data["record_step"] = states.REPORTED_LOCATION
 
         await update.message.reply_text(
             "📍 ¿En qué localización está esa persona?\n\n"
             "Puedes escribir:\n"
-            "- Ciudad\n"
-            "- Barrio\n"
-            "- Hospital\n"
-            "- Refugio\n"
-            "- Punto de referencia"
+            "• Ciudad\n"
+            "• Barrio\n"
+            "• Hospital\n"
+            "• Refugio\n"
+            "• Punto de referencia"
         )
+
         return
 
+    #
+    # Localización
+    #
+
     if step == states.REPORTED_LOCATION:
+
         context.user_data["reported_location"] = text
         context.user_data["record_step"] = states.SOURCE
 
         await ask_reporter_source(update, context)
+
         return
 
+    #
+    # Descripción
+    #
+
     if step == states.DESCRIPTION:
+
         context.user_data["description"] = text
         context.user_data["record_step"] = states.REVIEW
 
-        await update.message.reply_text(
-            "✅ Información recibida.\n\n"
-            "En el siguiente paso podrás revisar el reporte antes de enviarlo."
-        )
+        await review_record(update, context)
+
         return
