@@ -14,6 +14,11 @@ from app.conversation.create_record import (
     handle_reporter_source,
     submit_record,
 )
+from app.conversation.search_record import search_record_menu
+from app.conversation.search_record.form import (
+    ask_search_estimated_age,
+    handle_search_text,
+)
 from app.conversation.start import start
 
 
@@ -25,11 +30,23 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
 
     application.add_handler(
+        CallbackQueryHandler(start, pattern="^(cancel|back_to_start)$")
+    )
+
+    application.add_handler(
         CallbackQueryHandler(create_record_menu, pattern="^create_report$")
     )
 
     application.add_handler(
+        CallbackQueryHandler(search_record_menu, pattern="^search_report$")
+    )
+
+    application.add_handler(
         CallbackQueryHandler(ask_estimated_age, pattern="^event_")
+    )
+
+    application.add_handler(
+        CallbackQueryHandler(ask_search_estimated_age, pattern="^search_")
     )
 
     application.add_handler(
@@ -41,7 +58,13 @@ def main() -> None:
     )
 
     application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_record_text)
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_record_text),
+        group=1,
+    )
+
+    application.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_search_text),
+        group=2,
     )
 
     print("HCP Telegram Client is running...")
