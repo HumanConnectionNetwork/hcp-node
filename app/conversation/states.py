@@ -4,7 +4,7 @@ ESTIMATED_AGE = "estimated_age"
 REPORTED_NAME = "reported_name"
 REPORTED_LOCATION = "reported_location"
 SOURCE = "source"
-DESCRIPTION = "description"
+RECOGNITION_FEATURES = "recognition_features"
 REVIEW = "review"
 SUBMIT = "submit"
 
@@ -27,5 +27,4 @@ EDIT_TEXT = "edit_text"
 CANCEL = "cancel"
 EDIT = "edit"
 CONFIRM = "confirm"
-BACK = "back"# Create Record flow states
-
+BACK = "back"
