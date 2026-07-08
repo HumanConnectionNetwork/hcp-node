@@ -1,6 +1,6 @@
 {
   "start.welcome_title": "🤝 Human Connection Network",
-  "start.welcome_message": "Bienvenido. Este servicio permite crear y buscar observaciones humanitarias reportadas.",
+  "start.welcome_message": "Bienvenido. Este servicio permite registrar y consultar observaciones humanitarias utilizando el Humanitarian Connection Protocol (HCP).",
   "start.main_menu_question": "¿Qué deseas hacer?",
 
   "menu.create_report": "📝 Crear reporte",
@@ -10,11 +10,22 @@
 
   "record.title": "📝 Crear reporte",
   "record.question": "¿Qué deseas reportar?",
+
   "record.name": "👤 ¿Cuál es el nombre reportado?",
   "record.age": "🎂 ¿Cuál es la edad aproximada?",
   "record.location": "📍 ¿Dónde fue reportado el caso?",
   "record.source": "🏥 ¿Cuál es la fuente de información?",
-  "record.description": "📝 Describe brevemente la situación.",
+
+  "record.recognition_features.title": "🆔 Características de identificación",
+
+  "record.recognition_features.prompt": "Ayúdanos a identificar este caso.\n\nDescribe la vestimenta o cualquier característica visible que facilite reconocer a la persona o al animal.",
+
+  "record.recognition_features.help": "Puedes mencionar ropa, colores, lentes, tatuajes, cicatrices, mochila, collar u otros detalles visibles.",
+
+  "record.recognition_features.person_examples": "Ejemplos:\n• Camisa azul y pantalón negro\n• Vestido rojo\n• Chaqueta negra\n• Usa lentes\n• Tatuaje en el brazo derecho\n• Cicatriz en la frente\n• Mochila gris\n• Cabello largo y rizado",
+
+  "record.recognition_features.animal_examples": "Ejemplos:\n• Collar rojo\n• Pelaje marrón\n• Mancha blanca en el pecho\n• Oreja izquierda cortada\n• Arnés azul\n• Cojea de una pata",
+
   "record.summary": "📋 Resumen del reporte",
   "record.success": "✅ El reporte fue enviado correctamente.",
   "record.failed": "⚠️ No fue posible enviar el reporte.",
@@ -27,16 +38,26 @@
   "event.public_emergency": "🚑 Emergencia pública",
 
   "search.title": "🔍 Buscar caso reportado",
-  "search.question": "Introduce los datos disponibles para buscar un caso reportado.",
-  "search.no_results": "No se encontraron casos similares.",
-  "search.results": "Se encontraron posibles casos relacionados.",
-  "search.explanation": "Los resultados representan posibles correlaciones entre observaciones humanitarias y no una identificación confirmada.",
+  "search.question": "Introduce la información disponible para buscar un caso reportado.",
 
-  "candidate.title": "Posible caso relacionado",
+  "search.recognition_features.title": "🆔 Características de identificación",
+
+  "search.recognition_features.prompt": "Describe la vestimenta o cualquier característica visible que recuerdes.",
+
+  "search.recognition_features.help": "Esta información puede ayudar a encontrar observaciones relacionadas aunque el nombre o la edad sean imprecisos.",
+
+  "search.no_results": "No se encontraron casos relacionados.",
+
+  "search.results": "Se encontraron posibles casos relacionados.",
+
+  "search.explanation": "Los resultados representan posibles correlaciones entre observaciones humanitarias. No constituyen una identificación confirmada.",
+
+  "candidate.title": "📄 Posible caso relacionado",
   "candidate.probability": "Probabilidad",
   "candidate.details": "Ver detalles",
 
   "help.title": "❓ Ayuda",
+
   "help.description": "Human Connection Network permite registrar y consultar observaciones humanitarias utilizando el Humanitarian Connection Protocol (HCP).",
 
   "language.title": "🌐 Idioma",
@@ -53,9 +74,12 @@
   "common.edit": "✏️ Editar",
   "common.back": "⬅️ Volver",
   "common.next": "➡️ Continuar",
+
   "common.yes": "Sí",
   "common.no": "No",
+
   "common.unknown": "Desconocido",
+
   "common.loading": "⏳ Procesando...",
   "common.done": "✔️ Listo"
 }
