@@ -23,7 +23,7 @@ async def submit_record(
         estimated_age=int(context.user_data.get("estimated_age", 0)),
         reported_location=context.user_data.get("reported_location", "Desconocido"),
         source=context.user_data.get("source", "unknown"),
-        description=context.user_data.get("description", ""),
+        recognition_features=context.user_data.get("recognition_features", ""),
         status="reported",
     )
 
@@ -40,8 +40,8 @@ async def submit_record(
             "Gracias por contribuir.\n\n"
             "Tu reporte ha sido registrado como una observación humanitaria.\n\n"
             "HCP no busca identificar personas.\n"
-            "HCP relaciona observaciones humanitarias para facilitar búsquedas, "
-            "verificación y posibles coincidencias durante una emergencia.\n\n"
+            "HCP relaciona observaciones humanitarias mediante variables de correlación "
+            "para facilitar búsquedas, verificación y posibles coincidencias durante una emergencia.\n\n"
             "📄 Registro HCP\n\n"
             "ID:\n"
             "Pendiente de Nodo HCP\n\n"
