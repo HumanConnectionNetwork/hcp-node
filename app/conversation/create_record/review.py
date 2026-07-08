@@ -76,6 +76,10 @@ def get_animal_breed_label(context: ContextTypes.DEFAULT_TYPE) -> str:
 def build_review_summary(context: ContextTypes.DEFAULT_TYPE) -> str:
     subject_type = context.user_data.get("subject_type", "human")
     source = context.user_data.get("source", "unknown")
+    recognition_features = context.user_data.get(
+        "recognition_features",
+        "Sin características de identificación",
+    )
 
     summary = (
         "📋 Revisa tu reporte antes de enviarlo\n\n"
@@ -99,7 +103,7 @@ def build_review_summary(context: ContextTypes.DEFAULT_TYPE) -> str:
             f"Nombre reportado: {context.user_data.get('reported_name', 'Desconocido')}\n"
             f"Localización: {context.user_data.get('reported_location', 'Desconocido')}\n"
             f"Reportado por: {SOURCE_LABELS.get(source, source)}\n"
-            f"Descripción: {context.user_data.get('description', 'Sin descripción')}\n\n"
+            f"Características de identificación: {recognition_features}\n\n"
         )
     else:
         summary += (
@@ -107,7 +111,7 @@ def build_review_summary(context: ContextTypes.DEFAULT_TYPE) -> str:
             f"Nombre reportado: {context.user_data.get('reported_name', 'Desconocido')}\n"
             f"Localización: {context.user_data.get('reported_location', 'Desconocido')}\n"
             f"Reportado por: {SOURCE_LABELS.get(source, source)}\n"
-            f"Descripción: {context.user_data.get('description', 'Sin descripción')}\n\n"
+            f"Características de identificación: {recognition_features}\n\n"
         )
 
     summary += "¿Deseas enviar este reporte?"
