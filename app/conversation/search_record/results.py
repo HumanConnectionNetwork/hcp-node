@@ -70,7 +70,10 @@ async def show_mock_search_results(
         "search_reported_location",
         "Desconocido",
     )
-
+    search_recognition_features = context.user_data.get(
+    "search_recognition_features",
+    "No especificadas",
+)
     results = get_mock_results_for_query(search_name)
 
     message = (
@@ -78,9 +81,10 @@ async def show_mock_search_results(
         "HCP no identifica personas.\n"
         "Relaciona observaciones humanitarias que podrían corresponder a un mismo caso.\n\n"
         "Datos consultados:\n"
-        f"👤 Nombre: {search_name}\n"
-        f"🎂 Edad aproximada: {search_age}\n"
-        f"📍 Localización: {search_location}\n\n"
+f"👤 Nombre: {search_name}\n"
+f"🎂 Edad aproximada: {search_age}\n"
+f"📍 Localización: {search_location}\n"
+f"🆔 Características: {search_recognition_features}\n\n"
     )
 
     if not results:
