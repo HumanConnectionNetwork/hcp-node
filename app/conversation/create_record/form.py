@@ -156,16 +156,46 @@ async def handle_animal_breed(
     context.user_data["animal_breed_type"] = breed_type
 
     if breed_type == "known":
-        context.user_data["record_step"] = states.ANIMAL_BREED_TEXT
-        await query.edit_message_text(
-            text=(
-                "🐾 Escribe la raza aproximada.\n\n"
-                "Máximo 40 caracteres.\n\n"
-                "Ejemplo:\n"
-                "Golden Retriever"
-            )
+    context.user_data["record_step"] = states.ANIMAL_BREED_TEXT
+
+    species = context.user_data.get("animal_species", "unknown")
+
+    breed_examples = {
+        "dog": "Rottweiler, Pastor Alemán, Golden Retriever, mestizo",
+        "cat": "Siamés, Angora, Persa, mestizo",
+        "horse": "Pura sangre, Criollo, Cuarto de milla",
+        "bird": "Loro, Guacamaya, Periquito, Canario",
+        "unknown": "Si no lo sabes, escribe: Desconocido",
+    }
+
+    species_icons = {
+        "dog": "🐕",
+        "cat": "🐈",
+        "horse": "🐎",
+        "bird": "🦜",
+        "unknown": "🐾",
+    }
+
+    species_labels = {
+        "dog": "raza aproximada",
+        "cat": "raza aproximada",
+        "horse": "raza o tipo aproximado",
+        "bird": "especie aproximada",
+        "unknown": "raza, tipo o especie aproximada",
+    }
+
+    example = breed_examples.get(species, breed_examples["unknown"])
+    icon = species_icons.get(species, species_icons["unknown"])
+    label = species_labels.get(species, species_labels["unknown"])
+
+    await query.edit_message_text(
+        text=(
+            f"{icon} Escribe la {label}.\n\n"
+            "Máximo 40 caracteres.\n\n"
+            f"Ejemplos:\n{example}"
         )
-        return
+    )
+    return
 
     context.user_data["animal_breed"] = breed_type
     context.user_data["record_step"] = states.REPORTED_NAME
@@ -244,20 +274,24 @@ async def handle_reporter_source(
             "• Cabello largo y rizado"
         )
 
-    await query.edit_message_text(
-        text=(
-            "🆔 Características de identificación\n\n"
-            "Ayúdanos a identificar este caso.\n\n"
-            "Describe la vestimenta o cualquier característica visible que facilite reconocer "
-            "a la persona o al animal.\n\n"
-            "Puedes mencionar ropa, colores, lentes, tatuajes, cicatrices, mochila, collar "
-            "u otros detalles visibles.\n\n"
-            "Si corresponde, también puedes incluir una forma pública de contacto proporcionada "
-            "por quien reporta el caso, por ejemplo un número de teléfono.\n\n"
-            f"{examples}\n\n"
-            "Máximo 300 caracteres."
-        )
-    )
+    text=(
+    "🧩 Características para identificación\n\n"
+    "Describe la vestimenta o cualquier característica visible que facilite "
+    "reconocer a la persona o al animal.\n\n"
+    "👕 Vestimenta\n"
+    "🎨 Colores\n"
+    "👓 Lentes\n"
+    "🎒 Mochila\n"
+    "🦺 Collar\n"
+    "🩹 Cicatrices o señas particulares\n\n"
+    "☎️ CONTACTO PÚBLICO (opcional)\n"
+    "Si corresponde, también puedes incluir una forma pública de contacto "
+    "proporcionada por quien reporta el caso, por ejemplo un número de teléfono.\n\n"
+    "Este contacto forma parte únicamente de esta observación y no será utilizado "
+    "como criterio de búsqueda o correlación.\n\n"
+    f"{examples}\n\n"
+    "Máximo 300 caracteres."
+)
 
 
 async def handle_record_text(
