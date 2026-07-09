@@ -2,13 +2,21 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from app.conversation import states
-from app.models.humanitarian_record import HumanitarianRecord
+from app.hcp.record_builder import build_hcp_record
+from app.storage.hcp_storage import add_record
 
 
 async def submit_record(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
+    """
+    Final confirmation step.
+
+    Builds a canonical HCP record and stores it locally.
+    Later this storage layer will be replaced by the HCP Node API.
+    """
+
     query = update.callback_query
 
     if not query:
@@ -16,39 +24,49 @@ async def submit_record(
 
     await query.answer()
 
-    record = HumanitarianRecord(
-        subject_type=context.user_data.get("subject_type", "human"),
-        event_type=context.user_data.get("event_type", "unknown"),
-        reported_name=context.user_data.get("reported_name", "Desconocido"),
-        estimated_age=int(context.user_data.get("estimated_age", 0)),
-        reported_location=context.user_data.get("reported_location", "Desconocido"),
-        source=context.user_data.get("source", "unknown"),
-        recognition_features=context.user_data.get("recognition_features", ""),
-        status="reported",
-    )
+    # ---------------------------------------------------------
+    # Build canonical HCP record
+    # ---------------------------------------------------------
 
-    payload = record.to_dict()
+    record = build_hcp_record(context.user_data)
 
-    print("HCP Record payload:")
-    print(payload)
+    # ---------------------------------------------------------
+    # Local persistence (development only)
+    # ---------------------------------------------------------
+
+    add_record(record)
+
+    print("\n==============================")
+    print("New HCP Record")
+    print("==============================")
+    print(record)
+    print("==============================\n")
 
     context.user_data["record_step"] = states.SUBMIT
 
+    # ---------------------------------------------------------
+    # Confirmation message
+    # ---------------------------------------------------------
+
     await query.edit_message_text(
         text=(
-            "✅ Reporte preparado correctamente.\n\n"
+            "✅ Reporte registrado correctamente.\n\n"
             "Gracias por contribuir.\n\n"
-            "Tu reporte ha sido registrado como una observación humanitaria.\n\n"
-            "HCP no busca identificar personas.\n"
-            "HCP relaciona observaciones humanitarias mediante variables de correlación "
-            "para facilitar búsquedas, verificación y posibles coincidencias durante una emergencia.\n\n"
+            "Tu observación humanitaria ha sido almacenada correctamente.\n\n"
+            "HCP no almacena identidades.\n"
+            "HCP almacena observaciones humanitarias estructuradas que pueden "
+            "relacionarse mediante procesos de correlación.\n\n"
             "📄 Registro HCP\n\n"
-            "ID:\n"
-            "Pendiente de Nodo HCP\n\n"
+            f"ID:\n{record['id']}\n\n"
             "Estado:\n"
-            "🟢 Preparado correctamente\n\n"
-            "Puedes compartir este reporte cuando sea registrado en un Nodo HCP."
+            "🟢 Registrado localmente\n\n"
+            "Este almacenamiento es temporal para pruebas locales.\n"
+            "En producción el registro será enviado automáticamente a un Nodo HCP."
         )
     )
+
+    # ---------------------------------------------------------
+    # Clean conversation
+    # ---------------------------------------------------------
 
     context.user_data.clear()
