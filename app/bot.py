@@ -39,15 +39,10 @@ from app.conversation.search_record.form import (
     receive_person_features,
     receive_person_location,
     receive_person_name,
-    receive_person_source,
     start_animal_search_form,
     start_person_search_form,
 )
-from app.conversation.search_record.menu import (
-    search_animal_type_menu,
-    search_person_type_menu,
-    search_record_menu,
-)
+from app.conversation.search_record.menu import search_record_menu
 from app.conversation.search_record.results import show_search_results
 from app.conversation.start import start
 
@@ -148,15 +143,7 @@ def main() -> None:
         CallbackQueryHandler(search_record_menu, pattern="^search_menu$")
     )
 
-    # Search Record menus
-
-    application.add_handler(
-        CallbackQueryHandler(search_person_type_menu, pattern="^search_person$")
-    )
-
-    application.add_handler(
-        CallbackQueryHandler(search_animal_type_menu, pattern="^search_animal$")
-    )
+    # Search Record callbacks
 
     application.add_handler(
         CallbackQueryHandler(
@@ -165,7 +152,7 @@ def main() -> None:
                 context,
                 start_person_search_form,
             ),
-            pattern="^search_person_(missing|hospitalized|sheltered|safe)$",
+            pattern="^search_person$",
         )
     )
 
@@ -176,7 +163,7 @@ def main() -> None:
                 context,
                 start_animal_search_form,
             ),
-            pattern="^search_animal_(missing|found)$",
+            pattern="^search_animal$",
         )
     )
 
@@ -199,17 +186,6 @@ def main() -> None:
                 receive_animal_size,
             ),
             pattern="^search_animal_size_",
-        )
-    )
-
-    application.add_handler(
-        CallbackQueryHandler(
-            lambda update, context: _set_search_state(
-                update,
-                context,
-                receive_person_source,
-            ),
-            pattern="^search_source_",
         )
     )
 
