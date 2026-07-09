@@ -33,16 +33,15 @@ async def ask_estimated_age(
         await show_animal_species_options(update, context)
         return
 
-    context.user_data["record_step"] = states.ESTIMATED_AGE
-
+    context.user_data["record_step"] = states.REPORTED_NAME
     await query.edit_message_text(
-        text=(
-            "🎂 ¿Cuál es la edad estimada de la persona?\n\n"
-            "Escribe solo números.\n\n"
-            "Ejemplo:\n"
-            "45"
-        )
+    text=(
+        "👤 ¿Sabes el nombre de la persona?\n\n"
+        "Si lo sabes, escribe el nombre reportado.\n\n"
+        "Si no lo sabes, escribe:\n"
+        "Desconocido"
     )
+)
 
 
 async def show_animal_species_options(
@@ -302,7 +301,7 @@ async def handle_record_text(
             return
 
         context.user_data["estimated_age"] = text
-        context.user_data["record_step"] = states.REPORTED_NAME
+        context.user_data["record_step"] = states.REPORTED_LOCATION
 
         await update.message.reply_text(
             "👤 ¿Sabes el nombre de la persona?\n\n"
@@ -313,14 +312,34 @@ async def handle_record_text(
         return
 
     if step == states.REPORTED_NAME:
-        if len(text) > MAX_NAME_LENGTH:
-            await update.message.reply_text(
-                "⚠️ El nombre debe tener máximo 80 caracteres.\n\n"
-                "Intenta escribir una versión más corta."
-            )
-            return
+    if len(text) > MAX_NAME_LENGTH:
+        await update.message.reply_text(
+            "⚠️ El nombre debe tener máximo 80 caracteres.\n\n"
+            "Intenta escribir una versión más corta."
+        )
+        return
 
-        context.user_data["reported_name"] = text
+    context.user_data["reported_name"] = text
+
+    if subject_type == "animal":
+        context.user_data["record_step"] = states.REPORTED_LOCATION
+
+        await update.message.reply_text(
+            "📍 ¿Dónde se encuentra o fue visto el animal?\n\n"
+            "Puedes escribir ciudad, barrio, refugio, clínica veterinaria o punto de referencia.\n\n"
+            "Máximo 120 caracteres."
+        )
+        return
+
+    context.user_data["record_step"] = states.ESTIMATED_AGE
+
+    await update.message.reply_text(
+        "🎂 ¿Cuál es la edad estimada de la persona?\n\n"
+        "Escribe solo números.\n\n"
+        "Ejemplo:\n"
+        "45"
+    )
+    return
         context.user_data["record_step"] = states.REPORTED_LOCATION
 
         if subject_type == "animal":
