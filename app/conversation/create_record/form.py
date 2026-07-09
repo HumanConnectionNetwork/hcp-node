@@ -156,9 +156,9 @@ async def handle_animal_breed(
     context.user_data["animal_breed_type"] = breed_type
 
     if breed_type == "known":
-    context.user_data["record_step"] = states.ANIMAL_BREED_TEXT
+        context.user_data["record_step"] = states.ANIMAL_BREED_TEXT
 
-    species = context.user_data.get("animal_species", "unknown")
+        species = context.user_data.get("animal_species", "unknown")
 
     breed_examples = {
         "dog": "Rottweiler, Pastor Alemán, Golden Retriever, mestizo",
