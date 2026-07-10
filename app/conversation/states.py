@@ -62,6 +62,11 @@ SEARCH_ANIMAL_FEATURES = "search_animal_features"
 SEARCH_RESULTS = "search_results"
 SEARCH_EXPLAIN = "search_explain"
 
+# ==========================================================
+# SEARCH BY ID
+# ==========================================================
+
+SEARCH_BY_ID_TEXT = "search_by_id_text"
 
 # ==========================================================
 # EDIT FLOW
