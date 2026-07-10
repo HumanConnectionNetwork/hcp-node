@@ -273,6 +273,7 @@ async def receive_animal_size(
     await query.edit_message_text(text=message)
 
     return states.SEARCH_ANIMAL_BREED_TEXT
+    
 
 async def receive_animal_breed_text(
     update: Update,
