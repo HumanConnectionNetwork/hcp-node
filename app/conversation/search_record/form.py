@@ -250,9 +250,21 @@ async def receive_animal_size(
 
     species = search_data.get("species", "other")
     icon = ANIMAL_ICONS.get(species, "🐾")
-    examples = ANIMAL_BREED_EXAMPLES.get(species, ANIMAL_BREED_EXAMPLES["other"])
+    examples = ANIMAL_BREED_EXAMPLES.get(
+        species,
+        ANIMAL_BREED_EXAMPLES["other"],
+    )
+
+    size_labels = {
+        "small": "Pequeño",
+        "medium": "Mediano",
+        "large": "Grande",
+    }
+
+    size_label = size_labels.get(size, size)
 
     message = (
+        f"{icon} Tamaño registrado: {size_label}\n\n"
         f"{icon} Raza, tipo o especie específica\n\n"
         "Escribe la raza, tipo o especie específica del animal.\n\n"
         f"Ejemplos:\n{examples}"
@@ -261,7 +273,6 @@ async def receive_animal_size(
     await query.edit_message_text(text=message)
 
     return states.SEARCH_ANIMAL_BREED_TEXT
-
 
 async def receive_animal_breed_text(
     update: Update,
