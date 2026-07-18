@@ -641,13 +641,14 @@ def build_case_message(
     )
 
     event_type = _first_value(
-        interpretation,
-        "event_type",
-        "probable_event_type",
-        "type",
-        "status",
-        default=None,
-    )
+    interpretation,
+    "likely_event_type",
+    "event_type",
+    "probable_event_type",
+    "type",
+    "status",
+    default=None,
+   )
 
     if event_type is None:
         event_type = _first_value(
