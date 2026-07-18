@@ -4,30 +4,21 @@ from datetime import datetime
 from typing import Any
 
 
-MAX_SUPPORTING_SIGNALS = 3
-MAX_CONFLICTING_SIGNALS = 3
+MAX_SUPPORTING_EVIDENCE = 4
+MAX_CONFLICTING_EVIDENCE = 4
+MAX_RELATED_RECORDS = 3
 
 
 EVENT_TYPE_LABELS = {
     "missing": "Persona desaparecida",
-    "missing_report": "Persona desaparecida",
-    "missing_person": "Persona desaparecida",
     "hospitalized": "Persona hospitalizada",
-    "hospitalized_report": "Persona hospitalizada",
-    "hospitalized_person": "Persona hospitalizada",
     "sheltered": "Persona refugiada",
-    "sheltered_report": "Persona refugiada",
     "refugee": "Persona refugiada",
     "safe": "Persona localizada o a salvo",
-    "safe_report": "Persona localizada o a salvo",
     "found": "Persona localizada",
-    "found_person": "Persona localizada",
     "public_emergency": "Emergencia pública",
-    "public_emergency_report": "Emergencia pública",
     "missing_animal": "Animal desaparecido",
-    "missing_animal_report": "Animal desaparecido",
     "found_animal": "Animal encontrado",
-    "found_animal_report": "Animal encontrado",
 }
 
 
@@ -43,9 +34,8 @@ EVIDENCE_LEVEL_LABELS = {
 
 VERIFICATION_STATUS_LABELS = {
     "unverified": "⚪ No verificado",
-    "pending": "🟡 Pendiente de verificación",
-    "partially_verified": "🟠 Verificación parcial",
-    "verified": "🟢 Verificado",
+    "under_review": "🟡 En revisión",
+    "human_verified": "🟢 Verificado por una persona",
     "rejected": "🔴 Rechazado",
 }
 
@@ -59,6 +49,52 @@ SOURCE_LABELS = {
     "friend": "Amigo o conocido",
     "unknown": "Fuente no especificada",
     "swagger_manual_test": "Prueba manual del nodo",
+}
+
+
+EVIDENCE_TYPE_LABELS = {
+    "subject_reported_label_match": (
+        "El nombre reportado coincide"
+    ),
+    "subject_reported_label_partial_match": (
+        "El nombre presenta similitud parcial"
+    ),
+    "subject_reported_label_conflict": (
+        "El nombre reportado presenta diferencias"
+    ),
+    "subject_estimated_age_match": (
+        "La edad estimada coincide"
+    ),
+    "subject_estimated_age_partial_match": (
+        "La edad estimada es similar"
+    ),
+    "subject_estimated_age_conflict": (
+        "La edad estimada no coincide"
+    ),
+    "subject_recognition_features_match": (
+        "Las características para identificación coinciden"
+    ),
+    "subject_recognition_features_partial_match": (
+        "Las características presentan similitud parcial"
+    ),
+    "subject_recognition_features_conflict": (
+        "Las características tienen poca similitud"
+    ),
+    "observation_reported_location_match": (
+        "La ubicación reportada coincide"
+    ),
+    "observation_reported_location_partial_match": (
+        "La ubicación presenta similitud parcial"
+    ),
+    "observation_reported_location_conflict": (
+        "La ubicación reportada no coincide"
+    ),
+    "observation_event_type_match": (
+        "El tipo de situación coincide"
+    ),
+    "observation_event_type_conflict": (
+        "El tipo de situación presenta diferencias"
+    ),
 }
 
 
@@ -76,51 +112,13 @@ def _as_list(value: Any) -> list[Any]:
     return []
 
 
-def _first_value(
-    data: dict[str, Any],
-    *keys: str,
-    default: Any = None,
-) -> Any:
-    for key in keys:
-        value = data.get(key)
-
-        if value not in (None, "", [], {}):
-            return value
-
-    return default
-
-
-def _nested_value(
-    data: dict[str, Any],
-    *paths: tuple[str, ...],
-    default: Any = None,
-) -> Any:
-    for path in paths:
-        current: Any = data
-
-        for key in path:
-            if not isinstance(current, dict):
-                current = None
-                break
-
-            current = current.get(key)
-
-        if current not in (None, "", [], {}):
-            return current
-
-    return default
-
-
-def _clean_text(value: Any) -> str:
+def _normalize_key(value: Any) -> str:
     if value is None:
         return ""
 
-    return str(value).strip()
-
-
-def _normalize_key(value: Any) -> str:
     return (
-        _clean_text(value)
+        str(value)
+        .strip()
         .lower()
         .replace("-", "_")
         .replace(" ", "_")
@@ -155,7 +153,7 @@ def _format_verification_status(value: Any) -> str:
     key = _normalize_key(value)
 
     if not key:
-        return "⚪ No verificado"
+        return VERIFICATION_STATUS_LABELS["unverified"]
 
     return VERIFICATION_STATUS_LABELS.get(
         key,
@@ -181,157 +179,51 @@ def _format_percentage(value: Any) -> str:
     except (TypeError, ValueError):
         return "No disponible"
 
-    if 0 <= score <= 1:
-        score *= 100
+    if 0.0 <= score <= 1.0:
+        score *= 100.0
 
     return f"{score:.0f}%"
 
 
 def _format_datetime(value: Any) -> str:
-    text = _clean_text(value)
+    if value is None:
+        return "No especificada"
+
+    text = str(value).strip()
 
     if not text:
         return "No especificada"
 
     try:
-        normalized = text.replace("Z", "+00:00")
-        parsed = datetime.fromisoformat(normalized)
+        parsed = datetime.fromisoformat(
+            text.replace("Z", "+00:00")
+        )
 
-        return parsed.strftime("%d/%m/%Y, %H:%M UTC")
+        return parsed.strftime(
+            "%d/%m/%Y, %H:%M UTC"
+        )
+
     except ValueError:
         return text
 
 
-def _translate_signal_title(value: Any) -> str:
-    text = _clean_text(value)
-    key = _normalize_key(text)
-
-    translations = {
-        "subject_reported_label_match": (
-            "El nombre reportado coincide"
-        ),
-        "subject_reported_label_partial_match": (
-            "El nombre presenta similitud parcial"
-        ),
-        "subject_reported_label_conflict": (
-            "El nombre reportado presenta diferencias"
-        ),
-        "subject_estimated_age_match": (
-            "La edad estimada coincide"
-        ),
-        "subject_estimated_age_partial_match": (
-            "La edad estimada es similar"
-        ),
-        "subject_estimated_age_conflict": (
-            "La edad estimada no coincide"
-        ),
-        "subject_recognition_features_match": (
-            "Las características para identificación coinciden"
-        ),
-        "subject_recognition_features_partial_match": (
-            "Las características presentan similitud parcial"
-        ),
-        "subject_recognition_features_conflict": (
-            "Las características tienen poca similitud"
-        ),
-        "observation_reported_location_match": (
-            "La ubicación reportada coincide"
-        ),
-        "observation_reported_location_partial_match": (
-            "La ubicación presenta similitud parcial"
-        ),
-        "observation_reported_location_conflict": (
-            "La ubicación reportada no coincide"
-        ),
-        "observation_temporal_proximity_match": (
-            "Las observaciones son cercanas en el tiempo"
-        ),
-        "observation_temporal_proximity_conflict": (
-            "Las fechas de las observaciones son distantes"
-        ),
-        "observation_event_type_match": (
-            "El tipo de situación coincide"
-        ),
-        "observation_event_type_conflict": (
-            "El tipo de situación presenta diferencias"
-        ),
-    }
-
-    if key in translations:
-        return translations[key]
-
-    if "reported_label" in key:
-        if "conflict" in key:
-            return "El nombre reportado presenta diferencias"
-        if "partial" in key:
-            return "El nombre presenta similitud parcial"
-        return "El nombre reportado coincide"
-
-    if "estimated_age" in key:
-        if "conflict" in key:
-            return "La edad estimada no coincide"
-        if "partial" in key:
-            return "La edad estimada es similar"
-        return "La edad estimada coincide"
-
-    if "recognition_features" in key:
-        if "conflict" in key:
-            return "Las características tienen poca similitud"
-        if "partial" in key:
-            return "Las características presentan similitud parcial"
-        return "Las características para identificación coinciden"
-
-    if "reported_location" in key or "location" in key:
-        if "conflict" in key:
-            return "La ubicación reportada no coincide"
-        if "partial" in key:
-            return "La ubicación presenta similitud parcial"
-        return "La ubicación reportada coincide"
-
-    if "temporal" in key or "date" in key:
-        if "conflict" in key:
-            return "Las fechas presentan diferencias"
-        return "Las observaciones son cercanas en el tiempo"
-
-    if "event_type" in key:
-        if "conflict" in key:
-            return "El tipo de situación presenta diferencias"
-        return "El tipo de situación coincide"
-
-    return (
-        text.replace("_", " ").capitalize()
-        if text
-        else "Señal de correlación"
-    )
-
-
-def _extract_signal_title(signal: Any) -> str:
-    if isinstance(signal, str):
-        return _translate_signal_title(signal)
-
-    signal_data = _as_dict(signal)
-
-    raw_title = _first_value(
-        signal_data,
-        "type",
-        "signal_type",
-        "code",
-        "title",
-        "label",
-        "name",
-        default="",
-    )
-
-    return _translate_signal_title(raw_title)
+def _singular_or_plural(
+    count: int,
+    singular: str,
+    plural: str,
+) -> str:
+    return singular if count == 1 else plural
 
 
 def _extract_case(
     search_response: dict[str, Any],
 ) -> dict[str, Any]:
-    case = search_response.get("humanitarian_case")
+    humanitarian_case = search_response.get(
+        "humanitarian_case"
+    )
 
-    if isinstance(case, dict):
-        return case
+    if isinstance(humanitarian_case, dict):
+        return humanitarian_case
 
     case = search_response.get("case")
 
@@ -341,174 +233,139 @@ def _extract_case(
     return search_response
 
 
-def _extract_interpretation(
-    case: dict[str, Any],
-) -> dict[str, Any]:
-    return _as_dict(
-        _first_value(
-            case,
-            "interpreted_situation",
-            "situation",
-            "interpretation",
-            "current_situation",
-            default={},
-        )
-    )
+def _translate_evidence_type(value: Any) -> str:
+    key = _normalize_key(value)
 
+    if not key:
+        return "Señal de correlación"
 
-def _extract_correlation(
-    case: dict[str, Any],
-) -> dict[str, Any]:
-    return _as_dict(
-        _first_value(
-            case,
-            "correlation",
-            "correlation_summary",
-            "assessment",
-            default={},
-        )
-    )
+    known_label = EVIDENCE_TYPE_LABELS.get(key)
 
+    if known_label:
+        return known_label
 
-def _extract_verification(
-    case: dict[str, Any],
-) -> dict[str, Any]:
-    return _as_dict(
-        _first_value(
-            case,
-            "verification",
-            "verification_status",
-            default={},
-        )
-    )
+    if "reported_label" in key:
+        if "conflict" in key:
+            return "El nombre reportado presenta diferencias"
 
+        if "partial" in key:
+            return "El nombre presenta similitud parcial"
 
-def _extract_supporting_signals(
-    case: dict[str, Any],
-    correlation: dict[str, Any],
-) -> list[Any]:
-    signals = _first_value(
-        correlation,
-        "supporting_signals",
-        "supporting_evidence",
-        "compatible_evidence",
-        "matches",
-        default=None,
-    )
+        return "El nombre reportado coincide"
 
-    if signals is None:
-        signals = _first_value(
-            case,
-            "supporting_signals",
-            "supporting_evidence",
-            "compatible_evidence",
-            default=[],
+    if "estimated_age" in key:
+        if "conflict" in key:
+            return "La edad estimada no coincide"
+
+        if "partial" in key:
+            return "La edad estimada es similar"
+
+        return "La edad estimada coincide"
+
+    if "recognition_features" in key:
+        if "conflict" in key:
+            return "Las características tienen poca similitud"
+
+        if "partial" in key:
+            return (
+                "Las características presentan similitud parcial"
+            )
+
+        return (
+            "Las características para identificación coinciden"
         )
 
-    return _as_list(signals)
+    if "reported_location" in key or "location" in key:
+        if "conflict" in key:
+            return "La ubicación reportada no coincide"
+
+        if "partial" in key:
+            return "La ubicación presenta similitud parcial"
+
+        return "La ubicación reportada coincide"
+
+    if "event_type" in key:
+        if "conflict" in key:
+            return (
+                "El tipo de situación presenta diferencias"
+            )
+
+        return "El tipo de situación coincide"
+
+    return key.replace("_", " ").capitalize()
 
 
-def _extract_conflicting_signals(
-    case: dict[str, Any],
-    correlation: dict[str, Any],
-) -> list[Any]:
-    signals = _first_value(
-        correlation,
-        "conflicting_signals",
-        "conflicting_evidence",
-        "warnings",
-        "conflicts",
-        default=None,
+def _extract_evidence_label(
+    evidence: Any,
+) -> str:
+    if isinstance(evidence, str):
+        return _translate_evidence_type(evidence)
+
+    evidence_data = _as_dict(evidence)
+
+    return _translate_evidence_type(
+        evidence_data.get("type")
     )
 
-    if signals is None:
-        signals = _first_value(
-            case,
-            "conflicting_signals",
-            "conflicting_evidence",
-            "warnings",
-            default=[],
-        )
 
-    return _as_list(signals)
+def _deduplicate_evidence(
+    evidence_items: list[Any],
+) -> list[str]:
+    unique_labels: list[str] = []
+    seen_labels: set[str] = set()
 
+    for evidence in evidence_items:
+        label = _extract_evidence_label(evidence)
+        normalized_label = label.casefold()
 
-def _extract_related_records(
-    case: dict[str, Any],
-) -> list[dict[str, Any]]:
-    records = _first_value(
-        case,
-        "related_records",
-        "records",
-        "correlated_records",
-        "observations",
-        default=[],
-    )
+        if normalized_label in seen_labels:
+            continue
 
-    return [
-        record
-        for record in _as_list(records)
-        if isinstance(record, dict)
-    ]
+        seen_labels.add(normalized_label)
+        unique_labels.append(label)
+
+    return unique_labels
 
 
-def _extract_candidate_count(
-    search_response: dict[str, Any],
-    case: dict[str, Any],
-    related_records: list[dict[str, Any]],
-) -> int:
-    value = _first_value(
-        search_response,
-        "correlated_count",
-        "candidate_count",
-        default=None,
-    )
-
-    if value is None:
-        value = _first_value(
-            case,
-            "correlated_count",
-            "related_record_count",
-            "record_count",
-            default=len(related_records),
-        )
-
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return len(related_records)
-
-
-def _build_signal_section(
+def _build_evidence_section(
     title: str,
-    signals: list[Any],
+    evidence_items: list[Any],
     limit: int,
 ) -> str:
-    if not signals:
+    labels = _deduplicate_evidence(
+        evidence_items
+    )
+
+    if not labels:
         return ""
+
+    visible_labels = labels[:limit]
 
     lines = [title]
 
-    for signal in signals[:limit]:
-        lines.append(
-            f"• {_extract_signal_title(signal)}."
-        )
+    for label in visible_labels:
+        lines.append(f"• {label}.")
 
-    remaining = len(signals) - limit
+    remaining = len(labels) - len(visible_labels)
 
     if remaining > 0:
         lines.append(
-            f"• Hay {remaining} señal(es) adicional(es) "
-            "en la interpretación completa."
+            f"• Hay {remaining} señal(es) adicional(es)."
         )
 
     return "\n".join(lines)
 
 
-def _build_related_records_summary(
-    records: list[dict[str, Any]],
+def _build_related_records_section(
+    related_records: list[Any],
 ) -> str:
-    if not records:
+    valid_records = [
+        record
+        for record in related_records
+        if isinstance(record, dict)
+    ]
+
+    if not valid_records:
         return ""
 
     lines = [
@@ -516,73 +373,47 @@ def _build_related_records_summary(
     ]
 
     for index, record in enumerate(
-        records[:3],
+        valid_records[:MAX_RELATED_RECORDS],
         start=1,
     ):
-        observation = _as_dict(
-            record.get("observation")
+        event_type = _format_event_type(
+            record.get("event_type")
         )
 
-        event_type = _first_value(
-            record,
-            "event_type",
-            default=None,
+        observed_at = _format_datetime(
+            record.get("observed_at")
         )
 
-        if event_type is None:
-            event_type = _first_value(
-                observation,
-                "event_type",
-                "type",
-                default="",
-            )
-
-        observed_at = _first_value(
-            record,
-            "observed_at",
-            "timestamp",
-            "date",
-            default=None,
+        source = _format_source(
+            record.get("source")
         )
-
-        if observed_at is None:
-            observed_at = _first_value(
-                observation,
-                "observed_at",
-                "timestamp",
-                default="",
-            )
-
-        source = _first_value(
-            record,
-            "source",
-            "reported_by",
-            default=None,
-        )
-
-        if source is None:
-            source = _first_value(
-                observation,
-                "source",
-                "reported_by",
-                default="",
-            )
 
         lines.extend(
             [
                 "",
-                f"#{index} {_format_event_type(event_type)}",
-                f"🕒 {_format_datetime(observed_at)}",
-                f"🏷️ Fuente: {_format_source(source)}",
+                f"#{index} {event_type}",
+                f"🕒 {observed_at}",
+                f"🏷️ Fuente: {source}",
             ]
         )
 
-    if len(records) > 3:
+    remaining = (
+        len(valid_records)
+        - MAX_RELATED_RECORDS
+    )
+
+    if remaining > 0:
         lines.extend(
             [
                 "",
-                f"Hay {len(records) - 3} observación(es) adicional(es) "
-                "relacionada(s).",
+                (
+                    f"Hay {remaining} "
+                    f"{_singular_or_plural(
+                        remaining,
+                        'observación adicional',
+                        'observaciones adicionales',
+                    )}."
+                ),
             ]
         )
 
@@ -593,13 +424,12 @@ def build_case_message(
     search_response: dict[str, Any],
 ) -> str:
     """
-    Convert an HCP SearchResponse or HumanitarianCase into a concise,
-    Spanish-language Telegram message.
+    Build a concise Spanish Telegram message from an HCP
+    SearchResponse or HumanitarianCase.
 
-    HCP does not confirm identity. The message presents a probabilistic
-    interpretation and highlights the main compatible and conflicting signals.
+    A Humanitarian Case is a probabilistic local interpretation.
+    It must not be presented as identity confirmation.
     """
-
     if not isinstance(search_response, dict):
         raise TypeError(
             "search_response must be a dictionary"
@@ -612,172 +442,109 @@ def build_case_message(
     if not case:
         return (
             "🔍 Resultado de la búsqueda\n\n"
-            "No se encontraron observaciones relacionadas con los datos "
-            "proporcionados.\n\n"
-            "Puedes intentar nuevamente modificando el nombre, la edad, "
-            "la ubicación o las características para identificación."
+            "No se encontraron observaciones relacionadas "
+            "con los datos proporcionados.\n\n"
+            "Intenta nuevamente modificando alguno de los "
+            "datos de búsqueda."
         )
 
-    interpretation = _extract_interpretation(
-        case
-    )
-    correlation = _extract_correlation(
-        case
-    )
-    verification = _extract_verification(
-        case
-    )
-    related_records = _extract_related_records(
-        case
+    current_situation = _as_dict(
+        case.get("current_situation")
     )
 
-    supporting_signals = _extract_supporting_signals(
-        case,
-        correlation,
-    )
-    conflicting_signals = _extract_conflicting_signals(
-        case,
-        correlation,
+    correlation = _as_dict(
+        case.get("correlation")
     )
 
-    event_type = _first_value(
-    interpretation,
-    "likely_event_type",
-    "event_type",
-    "probable_event_type",
-    "type",
-    "status",
-    default=None,
-   )
-
-    if event_type is None:
-        event_type = _first_value(
-            case,
-            "event_type",
-            "probable_event_type",
-            default="",
-        )
-
-    location = _first_value(
-        interpretation,
-        "reported_location",
-        "location",
-        default=None,
+    verification = _as_dict(
+        case.get("verification")
     )
 
-    if location is None:
-        location = _first_value(
-            case,
-            "reported_location",
-            "location",
-            default="No especificada",
-        )
-
-    observed_at = _first_value(
-        interpretation,
-        "observed_at",
-        "observation_date",
-        "timestamp",
-        default=None,
+    related_records = _as_list(
+        case.get("related_records")
     )
 
-    if observed_at is None:
-        observed_at = _first_value(
-            case,
-            "observed_at",
-            "generated_at",
-            default="",
-        )
-
-    score = _first_value(
-        correlation,
-        "score",
-        "correlation_score",
-        "compatibility",
-        "probability",
-        default=None,
-    )
-
-    if score is None:
-        score = _first_value(
-            case,
-            "correlation_score",
-            "compatibility",
-            "probability",
-            default=None,
-        )
-
-    evidence_level = _first_value(
-        correlation,
-        "evidence_level",
-        "level",
-        default=None,
-    )
-
-    if evidence_level is None:
-        evidence_level = _first_value(
-            case,
-            "evidence_level",
-            default="",
-        )
-
-    verification_status = _first_value(
-        verification,
-        "status",
-        "state",
-        default=None,
-    )
-
-    if verification_status is None:
-        verification_status = _first_value(
-            case,
-            "verification_status",
-            default="unverified",
-        )
-
-    record_count = _extract_candidate_count(
-        search_response,
-        case,
-        related_records,
-    )
-
-    if record_count <= 0:
+    if not related_records:
         return (
             "🔍 Resultado de la búsqueda\n\n"
-            "No se encontraron observaciones suficientemente relacionadas "
+            "No se encontraron observaciones relacionadas "
             "con los datos proporcionados.\n\n"
-            "Puedes intentar nuevamente modificando el nombre, la edad, "
-            "la ubicación o las características para identificación."
+            "Intenta nuevamente modificando alguno de los "
+            "datos de búsqueda."
         )
+
+    likely_event_type = current_situation.get(
+        "likely_event_type"
+    )
+
+    reported_location = current_situation.get(
+        "reported_location"
+    )
+
+    observed_at = current_situation.get(
+        "observed_at"
+    )
+
+    score = correlation.get(
+        "score"
+    )
+
+    evidence_level = correlation.get(
+        "evidence_level"
+    )
+
+    supporting_evidence = _as_list(
+        correlation.get("supporting_evidence")
+    )
+
+    conflicting_evidence = _as_list(
+        correlation.get("conflicting_evidence")
+    )
+
+    verification_status = verification.get(
+        "status",
+        "unverified",
+    )
+
+    record_count = len(related_records)
+
+    observation_word = _singular_or_plural(
+        record_count,
+        "observación relacionada",
+        "observaciones relacionadas",
+    )
 
     message_parts = [
         "🔍 Posible caso relacionado",
         (
             "HCP no confirma identidades.\n"
-            "Relaciona observaciones que podrían corresponder "
-            "a un mismo caso."
+            "Relaciona observaciones que podrían "
+            "corresponder a un mismo caso."
         ),
         (
-            f"📊 Compatibilidad: {_format_percentage(score)}\n"
+            f"📊 Compatibilidad: "
+            f"{_format_percentage(score)}\n"
             f"🧭 Nivel de evidencia: "
             f"{_format_evidence_level(evidence_level)}"
         ),
         (
-            f"📍 Estado probable: {_format_event_type(event_type)}\n"
-            f"📌 Ubicación: {_clean_text(location) or 'No especificada'}\n"
+            f"📍 Estado probable: "
+            f"{_format_event_type(likely_event_type)}\n"
+            f"📌 Ubicación: "
+            f"{reported_location or 'No especificada'}\n"
             f"🕒 Observación más relevante: "
             f"{_format_datetime(observed_at)}"
         ),
         (
             f"Se encontraron {record_count} "
-            f"observación(es) relacionada(s)."
+            f"{observation_word}."
         ),
     ]
 
-    supporting_section = _build_signal_section(
-        "✅ Coincidencias principales",
-        supporting_signals,
-        MAX_SUPPORTING_SIGNALS,
+    supporting_section = _build_evidence_section(
+        title="✅ Coincidencias principales",
+        evidence_items=supporting_evidence,
+        limit=MAX_SUPPORTING_EVIDENCE,
     )
 
     if supporting_section:
@@ -785,10 +552,10 @@ def build_case_message(
             supporting_section
         )
 
-    conflicting_section = _build_signal_section(
-        "⚠️ Diferencias importantes",
-        conflicting_signals,
-        MAX_CONFLICTING_SIGNALS,
+    conflicting_section = _build_evidence_section(
+        title="⚠️ Diferencias importantes",
+        evidence_items=conflicting_evidence,
+        limit=MAX_CONFLICTING_EVIDENCE,
     )
 
     if conflicting_section:
@@ -796,8 +563,10 @@ def build_case_message(
             conflicting_section
         )
 
-    related_records_section = _build_related_records_summary(
-        related_records
+    related_records_section = (
+        _build_related_records_section(
+            related_records
+        )
     )
 
     if related_records_section:
@@ -809,10 +578,12 @@ def build_case_message(
         (
             "🛡️ Verificación\n"
             f"Estado: "
-            f"{_format_verification_status(verification_status)}\n\n"
+            f"{_format_verification_status(
+                verification_status
+            )}\n\n"
             "Este resultado necesita verificación humana. "
-            "Revisa las observaciones y sus fuentes antes de tomar "
-            "una decisión."
+            "Revisa las observaciones y sus fuentes antes "
+            "de tomar una decisión."
         )
     )
 
